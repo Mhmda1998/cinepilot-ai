@@ -262,6 +262,65 @@ def analyze_screenplay(
     }
 
 
+
+def _extract_props(
+    text: str,
+    characters: list[str],
+) -> list[str]:
+    """Extract explicitly mentioned handheld or used props."""
+
+    actions = _extract_actions(text, characters)
+
+    props = []
+
+    patterns = [
+        r"\b(?:holds?|holding|carries?|carrying)\s+(?:a|an|the)\s+([A-Za-z][A-Za-z0-9 -]{1,40})",
+        r"\b(?:picks up|pick up|grabs?|takes?)\s+(?:a|an|the)\s+([A-Za-z][A-Za-z0-9 -]{1,40})",
+        r"\b(?:opens?|opening|closes?|closing)\s+(?:a|an|the)\s+([A-Za-z][A-Za-z0-9 -]{1,40})",
+    ]
+
+    stop_words = {
+        "from",
+        "to",
+        "into",
+        "onto",
+        "with",
+        "and",
+        "then",
+        "while",
+        "before",
+        "after",
+    }
+
+    for action in actions:
+        for pattern in patterns:
+            for match in re.finditer(
+                pattern,
+                action,
+                re.IGNORECASE,
+            ):
+                prop = match.group(1).strip()
+
+                words = prop.split()
+                cleaned_words = []
+
+                for word in words:
+                    if word.lower() in stop_words:
+                        break
+                    cleaned_words.append(word)
+
+                prop = " ".join(cleaned_words).strip()
+
+                if not prop:
+                    continue
+
+                if prop.lower() not in {
+                    item.lower() for item in props
+                }:
+                    props.append(prop)
+
+    return props
+
 def production_breakdown(
     screenplay: str,
 ) -> dict[str, Any]:
@@ -279,6 +338,7 @@ def production_breakdown(
     characters = _extract_characters(text)
     dialogue = _extract_dialogue(text, characters)
     actions = _extract_actions(text, characters)
+    props = _extract_props(text, characters)
 
     locations = []
     time_of_day = []
@@ -305,11 +365,13 @@ def production_breakdown(
         "time_of_day": time_of_day,
         "dialogue": dialogue,
         "actions": actions,
+        "props": props,
         "production_facts": {
             "speaking_characters": characters,
             "locations": locations,
             "time_of_day": time_of_day,
             "actions": actions,
+            "props": props,
         },
         "production_inferences": [],
     }
