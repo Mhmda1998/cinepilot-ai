@@ -177,34 +177,65 @@ def _extract_actions(
     text: str,
     characters: list[str],
 ) -> list[str]:
-    """Extract likely action lines."""
+    """Extract action lines while excluding screenplay dialogue."""
 
     actions = []
 
-    character_set = set(characters)
+    scene_pattern = re.compile(
+        r"(?i)^(?:INT\\.|EXT\\.|INT/EXT\\.)\\s+.+$"
+    )
 
-    for raw_line in text.splitlines():
+    character_names = {
+        character.strip().upper()
+        for character in characters
+        if character and character.strip()
+    }
+
+    lines = text.splitlines()
+
+    in_dialogue = False
+
+    for raw_line in lines:
         line = raw_line.strip()
 
         if not line:
+            in_dialogue = False
             continue
 
-        if SCENE_PATTERN.match(line):
+        # Scene heading.
+        if scene_pattern.match(line):
+            in_dialogue = False
             continue
 
-        if line in character_set:
+        # Character heading.
+        if line.upper() in character_names:
+            in_dialogue = True
             continue
 
-        # Skip dialogue lines by checking whether they occur
-        # immediately after a character heading.
-        if line.startswith('"') and line.endswith('"'):
+        # Parenthetical dialogue direction.
+        if in_dialogue:
+            if (
+                line.startswith("(")
+                or line.startswith("[")
+            ):
+                continue
+
+            # Dialogue continues until a blank line.
             continue
 
-        if line not in actions:
-            actions.append(line)
+        # Skip standalone uppercase screenplay headings.
+        if (
+            line == line.upper()
+            and re.fullmatch(
+                r"[A-Z][A-Z0-9 .'-]{1,40}",
+                line,
+            )
+        ):
+            continue
+
+        actions.append(line)
 
     return actions
-
 
 def analyze_screenplay(
     screenplay: str,
@@ -247,6 +278,7 @@ def production_breakdown(
     scenes = _extract_scenes(text)
     characters = _extract_characters(text)
     dialogue = _extract_dialogue(text, characters)
+    actions = _extract_actions(text, characters)
 
     locations = []
     time_of_day = []
@@ -272,10 +304,12 @@ def production_breakdown(
         "location_count": len(locations),
         "time_of_day": time_of_day,
         "dialogue": dialogue,
+        "actions": actions,
         "production_facts": {
             "speaking_characters": characters,
             "locations": locations,
             "time_of_day": time_of_day,
+            "actions": actions,
         },
         "production_inferences": [],
     }
