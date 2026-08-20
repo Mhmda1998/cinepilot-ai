@@ -437,6 +437,43 @@ def _extract_sound(
 
     return sounds
 
+
+def _extract_lighting(
+    text: str,
+    characters: list[str],
+) -> list[str]:
+    """Extract explicitly mentioned lighting cues."""
+
+    actions = _extract_actions(text, characters)
+
+    lighting = []
+
+    patterns = [
+        r"\b((?:bright|dim|dark|soft|harsh|warm|cold|red|blue|green|white|natural|neon)\s+lights?)\b",
+        r"\b((?:bright|dim|dark|soft|harsh|warm|cold|red|blue|green|white|natural|neon)\s+lighting)\b",
+        r"\b((?:flashlight|candlelight|sunlight|moonlight|streetlight|spotlight))\b",
+        r"\b(?:lit by|illuminated by|bathed in)\s+((?:bright|dim|soft|harsh|warm|cold|red|blue|green|white|natural|neon)\s+lights?)\b",
+    ]
+
+    for action in actions:
+        for pattern in patterns:
+            for match in re.finditer(
+                pattern,
+                action,
+                re.IGNORECASE,
+            ):
+                item = match.group(1).strip().lower()
+
+                if not item:
+                    continue
+
+                if item not in {
+                    value.lower() for value in lighting
+                }:
+                    lighting.append(item)
+
+    return lighting
+
 def production_breakdown(
     screenplay: str,
 ) -> dict[str, Any]:
@@ -457,6 +494,8 @@ def production_breakdown(
     props = _extract_props(text, characters)
     wardrobe = _extract_wardrobe(text, characters)
     sounds = _extract_sound(text, characters)
+    lighting = _extract_lighting(text, characters)
+    lighting = _extract_lighting(text, characters)
 
     locations = []
     time_of_day = []
@@ -486,6 +525,8 @@ def production_breakdown(
         "props": props,
         "wardrobe": wardrobe,
         "sounds": sounds,
+        "lighting": lighting,
+        "lighting": lighting,
         "production_facts": {
             "speaking_characters": characters,
             "locations": locations,
@@ -494,6 +535,8 @@ def production_breakdown(
             "props": props,
             "wardrobe": wardrobe,
             "sounds": sounds,
+            "lighting": lighting,
+            "lighting": lighting,
         },
         "production_inferences": [],
     }
