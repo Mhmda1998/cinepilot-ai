@@ -321,6 +321,73 @@ def _extract_props(
 
     return props
 
+
+def _extract_wardrobe(
+    text: str,
+    characters: list[str],
+) -> list[str]:
+    """Extract explicitly mentioned wardrobe or clothing."""
+
+    actions = _extract_actions(text, characters)
+
+    wardrobe = []
+
+    patterns = [
+        r"\bwears?\s+(?:a|an|the)?\s*([A-Za-z][A-Za-z0-9 -]{1,50})",
+        r"\bwearing\s+(?:a|an|the)?\s*([A-Za-z][A-Za-z0-9 -]{1,50})",
+        r"\bdressed in\s+(?:a|an|the)?\s*([A-Za-z][A-Za-z0-9 -]{1,50})",
+        r"\bputs on\s+(?:a|an|the)?\s*([A-Za-z][A-Za-z0-9 -]{1,50})",
+    ]
+
+    stop_words = {
+        "and",
+        "then",
+        "while",
+        "as",
+        "before",
+        "after",
+        "with",
+        "while",
+    }
+
+    for action in actions:
+        for pattern in patterns:
+            for match in re.finditer(
+                pattern,
+                action,
+                re.IGNORECASE,
+            ):
+                item = match.group(1).strip()
+
+                words = item.split()
+                cleaned_words = []
+
+                for word in words:
+                    if word.lower() in stop_words:
+                        break
+                    cleaned_words.append(word)
+
+                item = " ".join(cleaned_words).strip()
+
+                # Normalize references such as:
+                # "same black jacket" -> "black jacket"
+                item = re.sub(
+                    r"^(?:the\s+)?same\s+",
+                    "",
+                    item,
+                    flags=re.IGNORECASE,
+                ).strip()
+
+                if not item:
+                    continue
+
+                if item.lower() not in {
+                    value.lower() for value in wardrobe
+                }:
+                    wardrobe.append(item)
+
+    return wardrobe
+
 def production_breakdown(
     screenplay: str,
 ) -> dict[str, Any]:
@@ -339,6 +406,7 @@ def production_breakdown(
     dialogue = _extract_dialogue(text, characters)
     actions = _extract_actions(text, characters)
     props = _extract_props(text, characters)
+    wardrobe = _extract_wardrobe(text, characters)
 
     locations = []
     time_of_day = []
@@ -366,12 +434,14 @@ def production_breakdown(
         "dialogue": dialogue,
         "actions": actions,
         "props": props,
+        "wardrobe": wardrobe,
         "production_facts": {
             "speaking_characters": characters,
             "locations": locations,
             "time_of_day": time_of_day,
             "actions": actions,
             "props": props,
+            "wardrobe": wardrobe,
         },
         "production_inferences": [],
     }
