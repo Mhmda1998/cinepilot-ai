@@ -388,6 +388,55 @@ def _extract_wardrobe(
 
     return wardrobe
 
+
+def _extract_sound(
+    text: str,
+    characters: list[str],
+) -> list[str]:
+    """Extract explicitly mentioned sound or audio cues."""
+
+    actions = _extract_actions(text, characters)
+
+    sounds = []
+
+    patterns = [
+        r"\b(?:a|an|the)?\s*([A-Za-z][A-Za-z0-9 -]{1,40})\s+(?:ring|rings|ringing)\b",
+        r"\b(?:a|an|the)?\s*([A-Za-z][A-Za-z0-9 -]{1,40})\s+(?:slam|slams|slamming)\b",
+        r"\b(?:a|an|the)?\s*([A-Za-z][A-Za-z0-9 -]{1,40})\s+(?:echo|echoes|echoing)\b",
+        r"\b(?:a|an|the)?\s*([A-Za-z][A-Za-z0-9 -]{1,40})\s+(?:rumble|rumbles|rumbling)\b",
+        r"\b(?:a|an|the)?\s*([A-Za-z][A-Za-z0-9 -]{1,40})\s+(?:start|starts|starting)\b",
+        r"\b(?:a|an|the)?\s*([A-Za-z][A-Za-z0-9 -]{1,40})\s+(?:crash|crashes|crashing)\b",
+        r"\b(?:a|an|the)?\s*([A-Za-z][A-Za-z0-9 -]{1,40})\s+(?:click|clicks|clicking)\b",
+    ]
+
+    for action in actions:
+        for pattern in patterns:
+            for match in re.finditer(
+                pattern,
+                action,
+                re.IGNORECASE,
+            ):
+                sound = match.group(1).strip()
+
+                sound = re.sub(
+                    r"^(?:a|an|the)\s+",
+                    "",
+                    sound,
+                    flags=re.IGNORECASE,
+                ).strip()
+
+                sound = sound.lower()
+
+                if not sound:
+                    continue
+
+                if sound not in {
+                    value.lower() for value in sounds
+                }:
+                    sounds.append(sound)
+
+    return sounds
+
 def production_breakdown(
     screenplay: str,
 ) -> dict[str, Any]:
@@ -407,6 +456,7 @@ def production_breakdown(
     actions = _extract_actions(text, characters)
     props = _extract_props(text, characters)
     wardrobe = _extract_wardrobe(text, characters)
+    sounds = _extract_sound(text, characters)
 
     locations = []
     time_of_day = []
@@ -435,6 +485,7 @@ def production_breakdown(
         "actions": actions,
         "props": props,
         "wardrobe": wardrobe,
+        "sounds": sounds,
         "production_facts": {
             "speaking_characters": characters,
             "locations": locations,
@@ -442,6 +493,7 @@ def production_breakdown(
             "actions": actions,
             "props": props,
             "wardrobe": wardrobe,
+            "sounds": sounds,
         },
         "production_inferences": [],
     }
