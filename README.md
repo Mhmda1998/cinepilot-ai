@@ -540,3 +540,54 @@ License
 See the repository license for usage and distribution terms.
 
 ```
+
+
+---
+
+## ClickHouse MCP Integration
+
+CinePilot integrates with ClickHouse through Model Context Protocol (MCP) for storing and querying production data.
+
+### Files
+
+- `app/integrations/clickhouse_mcp.py` - ClickHouse MCP client
+- `config/clickhouse.example.env` - Configuration template
+- `tests/test_clickhouse.py` - ClickHouse integration tests
+- `tests/test_agent_clickhouse.py` - Agent-ClickHouse integration tests
+
+### Configuration
+
+Copy the example config and fill in your credentials:
+
+```bash
+cp config/clickhouse.example.env .env
+```
+
+### Agent Tool
+
+The CinePilot agent includes `store_production_data` as a tool:
+
+```python
+from app.agents.cinepilot_agent import create_cinepilot_agent
+
+agent = create_cinepilot_agent()
+# Agent has 4 tools:
+# 1. analyze_screenplay
+# 2. production_breakdown
+# 3. search_screenplay
+# 4. store_production_data
+```
+
+### Workflow
+
+```
+CinePilot Agent
+      ↓
+Tool Calling
+      ↓
+ClickHouse MCP
+      ↓
+ClickHouse Database
+      ↓
+Result
+```
