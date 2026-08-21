@@ -1,5 +1,9 @@
 
 # CinePilot AI
+<p align="center">
+  <img src="docs/screenshots/cinepilot_demo.gif" width="700" alt="CinePilot Demo">
+</p>
+
 > AI-powered screenplay analysis and production copilot built with Gemini.
 
 CinePilot transforms screenplay text into structured production intelligence
