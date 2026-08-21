@@ -591,3 +591,16 @@ ClickHouse Database
       ↓
 Result
 ```
+
+
+---
+
+## Screenshots
+
+### Production Analysis Results
+
+![Production Results](docs/screenshots/results.png)
+
+### Detailed Breakdown
+
+![Detailed Results](docs/screenshots/results_detail.png)
