@@ -608,3 +608,24 @@ Result
 ### Detailed Breakdown
 
 ![Detailed Results](docs/screenshots/results_detail.png)
+
+
+---
+
+## Gemini AI Analysis
+
+CinePilot now includes real AI-powered analysis using Gemini.
+
+```python
+from app.tools.gemini_analyzer import analyze_with_gemini
+
+result = analyze_with_gemini(screenplay_text)
+```
+
+## Web Interface
+
+CinePilot includes a Streamlit web interface:
+
+```bash
+streamlit run streamlit_app.py
+```

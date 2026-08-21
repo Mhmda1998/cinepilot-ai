@@ -2,7 +2,7 @@
 
 ## The Problem
 
-Film production teams spend hours manually analyzing screenplays for props, wardrobe, sound, and lighting requirements.
+Film production teams spend hours manually analyzing screenplays for props, wardrobe, sound, and lighting.
 
 ## The Solution
 
@@ -10,10 +10,12 @@ CinePilot AI transforms screenplay text into structured production intelligence 
 
 ## Key Features
 
-1. Automatic Screenplay Analysis
-2. Production Breakdown
-3. Fact vs Inference Separation
-4. ClickHouse Integration
+- Gemini AI Analysis (real AI)
+- Screenplay Analysis (scenes, characters)
+- Production Breakdown (props, wardrobe, sound, lighting)
+- ClickHouse MCP Integration
+- Streamlit Web Interface
+- Fact vs Inference Separation
 
 ## Tech Stack
 
@@ -21,18 +23,12 @@ CinePilot AI transforms screenplay text into structured production intelligence 
 - Google ADK
 - ClickHouse
 - MCP
+- Streamlit
 - Python
-
-## Impact
-
-- 90% reduction in analysis time
-- Zero missed production elements
-- Structured data for planning
 
 ## Why CinePilot Wins
 
-1. Real problem
-2. Working solution
-3. Partner integration
+1. Real AI analysis with Gemini
+2. Working web interface
+3. Partner integration (ClickHouse)
 4. Production-ready
-5. Scalable

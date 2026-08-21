@@ -4,58 +4,30 @@
 
 ## Project Overview
 
-CinePilot AI is an AI-powered screenplay analysis and production copilot that transforms screenplay text into structured production intelligence.
+CinePilot AI is an AI-powered screenplay analysis and production copilot.
 
 ## Requirements Checklist
 
 | Requirement | Status |
 |-------------|--------|
-| Gemini-powered | YES |
+| Gemini-powered | YES (Gemini 3.6 Flash) |
 | Google Cloud ADK | YES |
-| Partner Integration (ClickHouse) | YES |
+| Partner Integration (ClickHouse) | YES via MCP |
 | Entertainment Focus | YES |
 | Production-ready | YES |
 
-## Partner Integration: ClickHouse
+## Key Features
 
-CinePilot integrates ClickHouse through MCP for storing production data.
-
-### Files:
-- app/integrations/clickhouse_mcp.py
-- config/clickhouse.example.env
-- tests/test_clickhouse.py
-- tests/test_agent_clickhouse.py
-
-### Agent Tool:
-- store_production_data
-
-## Production Features
-
-- Scenes
-- Characters
-- Locations
-- Props
-- Wardrobe
-- Sound
-- Lighting
-
-## Testing
-
-- Component tests: PASS
-- Regression tests: PASS
-- End-to-end test: PASS
-- ClickHouse tests: PASS
+- Gemini AI Analysis (real AI)
+- Screenplay Analysis
+- Production Breakdown
+- ClickHouse MCP Integration
+- Streamlit Web Interface
+- Fact vs Inference Separation
 
 ## Quick Start
 
 git clone https://github.com/Mhmda1998/cinepilot-ai.git
 cd cinepilot-ai
 pip install -r requirements.txt
-
-## Environment Variables
-
-- GEMINI_API_KEY
-- CLICKHOUSE_HOST
-- CLICKHOUSE_PORT
-- CLICKHOUSE_USER
-- CLICKHOUSE_DATABASE
+streamlit run streamlit_app.py
