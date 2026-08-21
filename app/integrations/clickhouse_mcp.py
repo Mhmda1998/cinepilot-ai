@@ -145,3 +145,16 @@ class ClickHouseMCPClient:
 def get_clickhouse_client() -> ClickHouseMCPClient:
     """Create and return a ClickHouse MCP client."""
     return ClickHouseMCPClient()
+
+
+def check_connection() -> dict:
+    """Check if ClickHouse is reachable."""
+    import socket
+    
+    config = ClickHouseConfig()
+    
+    try:
+        socket.create_connection((config.host, config.port), timeout=5)
+        return {"success": True, "message": f"ClickHouse reachable at {config.host}:{config.port}"}
+    except Exception as e:
+        return {"success": False, "message": f"ClickHouse not reachable: {e}"}
