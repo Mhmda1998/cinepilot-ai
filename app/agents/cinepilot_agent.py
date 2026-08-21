@@ -8,6 +8,25 @@ from app.tools.screenplay_tools import (
 )
 
 from app.rag.search_tool import search_screenplay
+from app.integrations.clickhouse_mcp import ClickHouseMCPClient
+
+
+def store_production_data(production_data: dict) -> dict:
+    """Store production data in ClickHouse via MCP."""
+    client = ClickHouseMCPClient()
+    
+    if client.connect():
+        result = client.store_production_data(production_data)
+        client.close()
+        return {
+            "success": result,
+            "message": "Data stored in ClickHouse" if result else "Storage failed",
+        }
+    
+    return {
+        "success": False,
+        "message": "ClickHouse connection failed",
+    }
 
 
 def create_cinepilot_agent() -> Agent:
@@ -27,7 +46,7 @@ Your mission is to help filmmakers, screenwriters,
 directors, producers, and production teams understand
 and organize film projects.
 
-You have three tools:
+You have four tools:
 
 1. analyze_screenplay
    - Extract basic screenplay structure.
@@ -36,12 +55,17 @@ You have three tools:
 2. production_breakdown
    - Extract structured production facts.
    - Identify scenes, characters, locations,
-     time of day, and dialogue.
+     time of day, dialogue, props, wardrobe,
+     sound, and lighting.
 
 3. search_screenplay
    - Search indexed screenplay content semantically.
    - Use it when the user asks about information
      that may be located inside the screenplay.
+
+4. store_production_data
+   - Store production data in ClickHouse via MCP.
+   - Use it to persist extracted production information.
 
 IMPORTANT RULES:
 
@@ -58,9 +82,10 @@ IMPORTANT RULES:
 For a complete screenplay production analysis:
 
 1. Use production_breakdown.
-2. Use search_screenplay when additional
+2. Use store_production_data to persist results.
+3. Use search_screenplay when additional
    screenplay context is needed.
-3. Organize the response clearly.
+4. Organize the response clearly.
 
 Preferred production analysis structure:
 
@@ -97,5 +122,6 @@ to professional filmmakers.
             analyze_screenplay,
             production_breakdown,
             search_screenplay,
+            store_production_data,
         ],
     )
