@@ -672,3 +672,29 @@ Real-time production data storage in ClickHouse Cloud.
 
 ### 7. Streamlit Web Interface
 User-friendly web interface for all features.
+
+
+---
+
+## 🚀 Powerful Features
+
+### 🎬 Visual Storytelling
+- AI Storyboard Generator - Visual storyboards from scenes
+- AI Scene Image Generator - Cinematic images per scene
+
+### 🎭 Creative Intelligence
+- Scene Mood Analyzer - Mood, music, and color suggestions
+- Dialogue Emotion Analyzer - Understands character emotions
+- Camera Angle Suggestor - Professional shot recommendations
+
+### 📋 Production Intelligence
+- Script Coverage Report - Hollywood-style analysis
+- Budget Estimator - Automatic cost calculation
+- AI Casting Suggestions - Actor recommendations
+- Continuity Tracker - Detects continuity errors
+
+### 💾 Data & Infrastructure
+- ClickHouse Cloud - Real-time production data storage (MCP)
+- SQLite - Local fallback storage
+- Streamlit UI - User-friendly web interface
+

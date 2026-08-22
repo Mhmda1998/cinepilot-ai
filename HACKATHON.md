@@ -16,11 +16,15 @@
 
 1. AI Storyboard Generator
 2. AI Scene Image Generator
-3. Production Budget Estimator
-4. AI Casting Suggestions
-5. Script Coverage Report
-6. ClickHouse Cloud Storage
-7. Streamlit Web Interface
+3. Scene Mood Analyzer
+4. Dialogue Emotion Analyzer
+5. Camera Angle Suggestor
+6. Script Coverage Report
+7. Budget Estimator
+8. AI Casting Suggestions
+9. Continuity Tracker
+10. ClickHouse Cloud Storage
+11. Streamlit Web Interface
 
 ## Quick Start
 
