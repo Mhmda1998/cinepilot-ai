@@ -1,58 +1,35 @@
-"""AI Casting Suggestions - يقترح ممثلين للأدوار."""
+"""AI Casting Suggestions - uses Google GenAI SDK."""
 
 import os
+from google import genai
 
 
 class CastingSuggestor:
-    """Suggest actor types for characters in screenplay."""
-
     def __init__(self):
         self.api_key = os.getenv("GEMINI_API_KEY", "")
-        
         if self.api_key:
             self.use_ai = True
-            import google.generativeai as genai
-            genai.configure(api_key=self.api_key)
-            self.model = genai.GenerativeModel("gemini-3.6-flash")
+            self.client = genai.Client(api_key=self.api_key)
         else:
             self.use_ai = False
-            self.model = None
+            self.client = None
 
     def suggest_casting(self, characters: list) -> dict:
-        """Suggest actor archetypes for each character."""
         suggestions = {}
-        
         for character in characters:
             if self.use_ai:
-                suggestion = self._ai_suggest(character)
+                try:
+                    prompt = f"Suggest actor archetype for character {character}"
+                    response = self.client.models.generate_content(model="gemini-3.6-flash", contents=prompt)
+                    suggestions[character] = response.text.strip()
+                except Exception:
+                    suggestions[character] = "Versatile actor"
             else:
-                suggestion = self._basic_suggest(character)
-            
-            suggestions[character] = suggestion
-        
+                suggestions[character] = "Versatile actor"
         return suggestions
 
-    def _ai_suggest(self, character: str) -> str:
-        """Use AI to suggest actor type."""
-        prompt = f"""
-        For the character named "{character}" in a film:
-        Suggest actor archetype (age, type, personality traits).
-        Keep it brief: 2-3 lines.
-        """
-        try:
-            response = self.model.generate_content(prompt)
-            return response.text
-        except:
-            return self._basic_suggest(character)
-
-    def _basic_suggest(self, character: str) -> str:
-        """Basic suggestion without AI."""
-        return f"Character: {character}\nSuggested: Versatile actor, age flexible"
-
     def format_suggestions(self, suggestions: dict) -> str:
-        """Format casting suggestions."""
         lines = ["👤 Casting Suggestions", "=" * 40]
-        for character, suggestion in suggestions.items():
-            lines.append(f"\n{character}:")
-            lines.append(f"  {suggestion}")
+        for char, sugg in suggestions.items():
+            lines.append(f"{char}: {sugg}")
         return "\n".join(lines)

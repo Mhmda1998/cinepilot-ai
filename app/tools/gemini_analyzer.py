@@ -1,10 +1,10 @@
-"""Gemini-powered screenplay analyzer - uses real AI."""
+"""Gemini-powered screenplay analyzer - uses Google GenAI SDK."""
 
 import os
 import json
 from typing import Any
 
-import google.generativeai as genai
+from google import genai
 
 
 class GeminiAnalyzer:
@@ -12,13 +12,12 @@ class GeminiAnalyzer:
 
     def __init__(self, api_key: str | None = None):
         self.api_key = api_key or os.getenv("GEMINI_API_KEY", "")
-        
+
         if self.api_key:
-            genai.configure(api_key=self.api_key)
-            self.model = genai.GenerativeModel("gemini-3.6-flash")
+            self.client = genai.Client(api_key=self.api_key)
             self.is_ready = True
         else:
-            self.model = None
+            self.client = None
             self.is_ready = False
 
     def analyze(self, screenplay: str) -> dict[str, Any]:
@@ -50,29 +49,26 @@ Screenplay:
 """
 
         try:
-            response = self.model.generate_content(prompt)
-            text = response.text
-            
-            # تنظيف النص لاستخراج JSON
-            text = text.strip()
-            
-            # إزالة علامات markdown إذا وجدت
+            response = self.client.models.generate_content(
+                model="gemini-3.6-flash",
+                contents=prompt,
+            )
+            text = response.text.strip()
+
+            # إزالة علامات markdown إذا وُجدت
             if text.startswith("```"):
                 text = text.split("\n", 1)[-1]
                 text = text.rsplit("```", 1)[0]
-            
             text = text.strip()
-            
-            # تحويل إلى dict
+
             data = json.loads(text)
             return {"success": True, **data}
-            
+
         except json.JSONDecodeError as e:
-            # إذا فشل JSON، نرجع النص كما هو
             return {
                 "success": True,
-                "raw_text": response.text,
-                "error": f"JSON parse failed: {e}"
+                "raw_text": response.text if 'response' in locals() else "",
+                "error": f"JSON parse failed: {e}",
             }
         except Exception as e:
             return {"success": False, "error": str(e)}
