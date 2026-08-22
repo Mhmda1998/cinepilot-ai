@@ -646,3 +646,29 @@ CinePilot is **connected to real ClickHouse Cloud**:
 - `connect_to_cloud()` - Connect to ClickHouse Cloud
 - `store_to_cloud()` - Store production data in cloud
 - `check_connection()` - Check if ClickHouse is reachable
+
+
+---
+
+## Powerful Features
+
+### 1. AI Storyboard Generator
+Generate visual storyboards from screenplay scenes using Gemini.
+
+### 2. AI Scene Image Generator
+Create cinematic images for each scene.
+
+### 3. Production Budget Estimator
+Calculate estimated production costs automatically.
+
+### 4. AI Casting Suggestions
+Get actor archetype recommendations for characters.
+
+### 5. Script Coverage Report
+Professional Hollywood-style coverage reports.
+
+### 6. ClickHouse Cloud Storage
+Real-time production data storage in ClickHouse Cloud.
+
+### 7. Streamlit Web Interface
+User-friendly web interface for all features.

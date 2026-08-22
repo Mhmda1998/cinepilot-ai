@@ -6,26 +6,21 @@
 
 | Requirement | Status |
 |-------------|--------|
-| Gemini-powered | YES (Gemini 3.6 Flash) |
+| Gemini-powered | YES (Gemini 3.6 Flash + Image) |
 | Google Cloud ADK | YES |
 | Partner Integration (ClickHouse) | YES - Connected to Cloud |
 | Entertainment Focus | YES |
 | Production-ready | YES |
 
-## Key Features
+## Powerful Features
 
-- Gemini AI Analysis (real AI)
-- ClickHouse Cloud (connected and working)
-- SQLite Storage (local fallback)
-- Streamlit Web Interface
-- 4 Agent Tools
-- Fact vs Inference Separation
-
-## ClickHouse Cloud
-
-- Host: y6mqvbljnk.europe-west4.gcp.clickhouse.cloud
-- Port: 8443
-- Status: Connected and storing data
+1. AI Storyboard Generator
+2. AI Scene Image Generator
+3. Production Budget Estimator
+4. AI Casting Suggestions
+5. Script Coverage Report
+6. ClickHouse Cloud Storage
+7. Streamlit Web Interface
 
 ## Quick Start
 
