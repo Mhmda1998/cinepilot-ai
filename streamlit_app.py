@@ -1,556 +1,780 @@
-import streamlit as st
-from pathlib import Path
-import re
 import json
+import sys
+from pathlib import Path
+
+import streamlit as st
+
+ROOT = Path(__file__).resolve().parent
+
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+try:
+    from app.tools.screenplay_tools import production_breakdown
+    from app.tools.production_bible import ProductionBible
+except ImportError:
+    from tools.screenplay_tools import production_breakdown
+    from tools.production_bible import ProductionBible
 
 st.set_page_config(
     page_title="CinePilot AI",
     page_icon="🎬",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="collapsed",
 )
 
 st.markdown(
     """
-    <style>
+<style>
 
-    .stApp {
-        background:
-            radial-gradient(circle at 15% 10%, rgba(120, 70, 180, 0.12), transparent 28%),
-            radial-gradient(circle at 85% 20%, rgba(40, 120, 220, 0.10), transparent 28%),
-            #080b12;
-        color: #f5f7fb;
-    }
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap');
 
-    .block-container {
-        max-width: 1400px;
-        padding-top: 2rem;
-        padding-bottom: 4rem;
-    }
+html, body, [class*="css"] {
+    font-family: "Cairo", sans-serif;
+}
 
-    section[data-testid="stSidebar"] {
-        background: #0d111b;
-        border-right: 1px solid rgba(255,255,255,0.08);
-    }
-
-    section[data-testid="stSidebar"] .block-container {
-        padding-top: 2rem;
-    }
-
-    #MainMenu { visibility: hidden; }
-    footer { visibility: hidden; }
-    header { background: transparent !important; }
-
-    .hero {
-        padding: 2.5rem 0 1.5rem 0;
-    }
-
-    .hero-title {
-        font-size: 3.2rem;
-        font-weight: 800;
-        letter-spacing: -0.04em;
-        margin-bottom: 0.3rem;
-        background: linear-gradient(
-            90deg,
-            #ffffff 0%,
-            #c9b7ff 45%,
-            #8fbaff 100%
+.stApp {
+    background:
+        radial-gradient(
+            circle at 10% 5%,
+            rgba(124, 58, 237, 0.18),
+            transparent 28%
+        ),
+        radial-gradient(
+            circle at 90% 15%,
+            rgba(34, 211, 238, 0.10),
+            transparent 25%
+        ),
+        linear-gradient(
+            135deg,
+            #05060b 0%,
+            #090b14 45%,
+            #05060b 100%
         );
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-    }
+    color: #f8fafc;
+}
 
-    .hero-subtitle {
-        font-size: 1.15rem;
-        color: #a9b2c4;
-        max-width: 760px;
-        line-height: 1.7;
-    }
+.block-container {
+    max-width: 1250px;
+    padding-top: 2rem;
+    padding-bottom: 4rem;
+}
 
-    .badge {
-        display: inline-block;
-        padding: 0.35rem 0.75rem;
-        margin-bottom: 1rem;
-        border-radius: 999px;
-        border: 1px solid rgba(160,130,255,0.35);
-        background: rgba(120,80,220,0.10);
-        color: #cdbfff;
-        font-size: 0.82rem;
-        font-weight: 700;
-        letter-spacing: 0.04em;
-    }
+#MainMenu { visibility: hidden; }
+footer { visibility: hidden; }
+header { background: transparent !important; }
 
-    .card {
-        background: linear-gradient(
+.hero {
+    position: relative;
+    padding: 55px 30px 40px 30px;
+    text-align: center;
+    border-radius: 30px;
+    margin-bottom: 30px;
+    background:
+        radial-gradient(
+            circle at 50% 0%,
+            rgba(139, 92, 246, 0.25),
+            transparent 45%
+        ),
+        linear-gradient(
+            135deg,
+            rgba(18, 20, 35, 0.96),
+            rgba(8, 10, 18, 0.96)
+        );
+    border: 1px solid rgba(139, 92, 246, 0.28);
+    box-shadow:
+        0 25px 80px rgba(0, 0, 0, 0.45),
+        inset 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.hero-badge {
+    display: inline-block;
+    padding: 8px 18px;
+    border-radius: 999px;
+    color: #c4b5fd;
+    background: rgba(139, 92, 246, 0.10);
+    border: 1px solid rgba(139, 92, 246, 0.40);
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 18px;
+}
+
+.hero-title {
+    font-size: clamp(42px, 7vw, 78px);
+    line-height: 1;
+    font-weight: 800;
+    letter-spacing: -3px;
+    margin: 10px 0 20px 0;
+    background: linear-gradient(
+        90deg,
+        #ffffff,
+        #c4b5fd,
+        #818cf8,
+        #67e8f9
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.hero-subtitle {
+    max-width: 760px;
+    margin: auto;
+    color: #aeb7ca;
+    font-size: 19px;
+    line-height: 1.9;
+}
+
+.feature-card {
+    height: 100%;
+    padding: 24px;
+    border-radius: 22px;
+    background:
+        linear-gradient(
             145deg,
-            rgba(25,31,45,0.95),
-            rgba(13,17,27,0.95)
+            rgba(25, 28, 45, 0.95),
+            rgba(11, 13, 23, 0.95)
         );
-        border: 1px solid rgba(255,255,255,0.08);
-        border-radius: 18px;
-        padding: 1.3rem;
-        margin-bottom: 1rem;
-        box-shadow: 0 10px 40px rgba(0,0,0,0.18);
-    }
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    box-shadow:
+        0 15px 40px rgba(0, 0, 0, 0.25);
+}
 
-    .card-title {
-        font-size: 1.05rem;
-        font-weight: 750;
-        margin-bottom: 0.5rem;
-    }
+.feature-icon { font-size: 30px; margin-bottom: 10px; }
+.feature-title { font-size: 18px; font-weight: 700; color: #f8fafc; }
+.feature-text { color: #9ca8bd; font-size: 14px; line-height: 1.7; }
 
-    .card-text {
-        color: #9da7b9;
-        line-height: 1.6;
-    }
+.section-title {
+    font-size: 27px;
+    font-weight: 800;
+    margin-top: 35px;
+    margin-bottom: 18px;
+    color: #f8fafc;
+}
 
-    .metric-card {
-        background: linear-gradient(
+.section-subtitle {
+    color: #8e9ab0;
+    margin-bottom: 20px;
+}
+
+.metric-card {
+    padding: 22px 16px;
+    text-align: center;
+    border-radius: 20px;
+    background:
+        linear-gradient(
             145deg,
-            rgba(28,34,49,0.95),
-            rgba(15,19,30,0.95)
+            rgba(23, 27, 43, 0.98),
+            rgba(11, 13, 23, 0.98)
         );
-        border: 1px solid rgba(255,255,255,0.08);
-        border-radius: 16px;
-        padding: 1.25rem;
-        min-height: 120px;
-    }
+    border: 1px solid rgba(139, 92, 246, 0.18);
+    box-shadow: 0 12px 35px rgba(0,0,0,.20);
+}
 
-    .metric-icon { font-size: 1.4rem; }
-    .metric-value { font-size: 2rem; font-weight: 800; margin-top: 0.35rem; }
-    .metric-label { color: #8f99ab; font-size: 0.85rem; }
+.metric-value { font-size: 34px; font-weight: 800; color: #c4b5fd; }
+.metric-label { color: #8995aa; font-size: 13px; }
 
-    .section-title {
-        font-size: 1.5rem;
-        font-weight: 800;
-        margin-top: 1.8rem;
-        margin-bottom: 0.8rem;
-    }
+.result-card {
+    padding: 22px;
+    border-radius: 20px;
+    background: rgba(15, 18, 30, 0.92);
+    border: 1px solid rgba(255,255,255,0.07);
+    margin-bottom: 14px;
+}
 
-    .section-description {
-        color: #929caf;
-        margin-bottom: 1rem;
-    }
+.result-header {
+    font-size: 17px;
+    font-weight: 800;
+    margin-bottom: 12px;
+}
 
-    .status {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.75rem 1rem;
-        border-radius: 12px;
-        background: rgba(50,190,120,0.08);
-        border: 1px solid rgba(50,190,120,0.18);
-        color: #8ee6ba;
-        font-size: 0.9rem;
-    }
+.result-item {
+    display: inline-block;
+    padding: 7px 12px;
+    margin: 4px;
+    border-radius: 10px;
+    color: #dbeafe;
+    background: rgba(99, 102, 241, 0.12);
+    border: 1px solid rgba(99, 102, 241, 0.20);
+    font-size: 13px;
+}
 
-    .fact-box {
-        border-left: 3px solid #7c5cff;
-        background: rgba(124,92,255,0.08);
-        padding: 1rem;
-        border-radius: 0 12px 12px 0;
-        margin: 0.5rem 0;
-    }
+.status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 12px;
+    border-radius: 999px;
+    color: #86efac;
+    background: rgba(34,197,94,.08);
+    border: 1px solid rgba(34,197,94,.18);
+    font-size: 13px;
+    font-weight: 700;
+}
 
-    .inference-box {
-        border-left: 3px solid #4d9fff;
-        background: rgba(77,159,255,0.08);
-        padding: 1rem;
-        border-radius: 0 12px 12px 0;
-        margin: 0.5rem 0;
-    }
+.stButton > button {
+    border-radius: 14px !important;
+    border: 1px solid rgba(139,92,246,.35) !important;
+    background:
+        linear-gradient(
+            135deg,
+            #7c3aed,
+            #6366f1
+        ) !important;
+    color: white !important;
+    font-weight: 800 !important;
+    min-height: 48px;
+    box-shadow:
+        0 12px 30px rgba(99,102,241,.20) !important;
+    transition: all .2s ease;
+}
 
-    .box-label {
-        font-size: 0.75rem;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        font-weight: 800;
-        margin-bottom: 0.35rem;
-    }
+.stButton > button:hover {
+    border-color: #a78bfa !important;
+    transform: translateY(-1px);
+    box-shadow:
+        0 16px 35px rgba(124,58,237,.30) !important;
+}
 
-    .stButton > button {
-        border-radius: 12px;
-        min-height: 45px;
-        font-weight: 700;
-        border: 1px solid rgba(255,255,255,0.12);
-    }
+textarea {
+    background: #0d101a !important;
+    color: #e5e7eb !important;
+    border-radius: 18px !important;
+    border: 1px solid rgba(139,92,246,.20) !important;
+}
 
-    textarea {
-        background: #0e131e !important;
-        color: #edf1f8 !important;
-        border-radius: 14px !important;
-        border: 1px solid rgba(255,255,255,0.10) !important;
-    }
+[data-testid="stFileUploader"] {
+    background: rgba(16,19,31,.85);
+    border-radius: 20px;
+    border: 1px dashed rgba(139,92,246,.35);
+    padding: 12px;
+}
 
-    .streamlit-expanderHeader {
-        background: rgba(255,255,255,0.025);
-        border-radius: 12px;
-    }
+[data-testid="stExpander"] {
+    background: rgba(13,16,27,.85);
+    border: 1px solid rgba(255,255,255,.06);
+    border-radius: 18px;
+}
 
-    .side-logo {
-        text-align: center;
-        padding: 0.5rem 0 1.5rem;
-    }
+.footer {
+    margin-top: 60px;
+    padding: 25px;
+    text-align: center;
+    color: #69758a;
+    border-top: 1px solid rgba(255,255,255,.06);
+}
 
-    .side-logo-icon { font-size: 3rem; }
-    .side-logo-title { font-size: 1.35rem; font-weight: 800; }
-    .side-logo-subtitle { color: #7f899c; font-size: 0.78rem; }
+.footer strong {
+    color: #a78bfa;
+}
 
-    </style>
-    """,
+</style>
+""",
     unsafe_allow_html=True,
 )
 
-if "analysis" not in st.session_state:
-    st.session_state.analysis = None
+st.markdown(
+    """
+<div class="hero" dir="rtl">
 
-if "screenplay" not in st.session_state:
-    st.session_state.screenplay = ""
+<div class="hero-badge">
+🎬 AI-POWERED FILM PRODUCTION
+</div>
 
-with st.sidebar:
+<div class="hero-title">
+CinePilot AI
+</div>
 
+<div class="hero-subtitle">
+حوّل السيناريو إلى معلومات إنتاجية منظمة
+باستخدام تحليل السيناريو، الذكاء الاصطناعي،
+الاسترجاع الدلالي، وسير عمل الوكيل الذكي المدعوم بـ Gemini.
+</div>
+
+</div>
+""",
+    unsafe_allow_html=True,
+)
+
+c1, c2, c3, c4 = st.columns(4)
+
+with c1:
     st.markdown(
         """
-        <div class="side-logo">
-            <div class="side-logo-icon">🎬</div>
-            <div class="side-logo-title">CinePilot AI</div>
-            <div class="side-logo-subtitle">
-                Production Intelligence Copilot
-            </div>
-        </div>
-        """,
+<div class="feature-card" dir="rtl">
+<div class="feature-icon">🎬</div>
+<div class="feature-title">تحليل السيناريو</div>
+<div class="feature-text">
+استخراج المشاهد والشخصيات والمواقع والوقت والحوار والأحداث.
+</div>
+</div>
+""",
         unsafe_allow_html=True,
     )
 
-    st.markdown("### Workspace")
-
-    page = st.radio(
-        "Navigation",
-        [
-            "🎬 Production Studio",
-            "🤖 CinePilot Agent",
-            "📊 Production Report",
-            "⚙️ System",
-        ],
-        label_visibility="collapsed",
-    )
-
-    st.divider()
-
-    st.markdown("### System Status")
-
+with c2:
     st.markdown(
         """
-        <div class="status">
-            <span>●</span>
-            CinePilot Online
-        </div>
-        """,
+<div class="feature-card" dir="rtl">
+<div class="feature-icon">🎭</div>
+<div class="feature-title">Production Breakdown</div>
+<div class="feature-text">
+استخراج الدعائم والملابس والأصوات والإضاءة وعناصر الإنتاج.
+</div>
+</div>
+""",
         unsafe_allow_html=True,
     )
 
-    st.write("")
-
-    st.caption("Gemini-powered screenplay intelligence")
-    st.caption("RAG-ready architecture")
-    st.caption("Production workflow analysis")
-
-
-def read_uploaded_file(uploaded_file):
-    if uploaded_file is None:
-        return ""
-    suffix = Path(uploaded_file.name).suffix.lower()
-    if suffix in [".txt", ".md"]:
-        return uploaded_file.getvalue().decode("utf-8", errors="ignore")
-    return uploaded_file.getvalue().decode("utf-8", errors="ignore")
-
-
-def basic_screenplay_analysis(text):
-    if not text.strip():
-        return {
-            "scenes": [],
-            "characters": [],
-            "locations": [],
-            "time_of_day": [],
-            "dialogue": [],
-            "actions": [],
-            "props": [],
-            "wardrobe": [],
-            "sound": [],
-            "lighting": [],
-        }
-
-    lines = [line.strip() for line in text.splitlines() if line.strip()]
-
-    scene_lines = [
-        line for line in lines
-        if re.match(r"^(INT\.|EXT\.|INT/EXT\.|I/E\.)", line, re.IGNORECASE)
-    ]
-
-    characters = []
-
-    for line in lines:
-        if (
-            line.isupper()
-            and 2 <= len(line.split()) <= 4
-            and not line.startswith(("INT.", "EXT."))
-        ):
-            cleaned = re.sub(r"\([^)]*\)", "", line).strip()
-            if cleaned and cleaned not in characters:
-                characters.append(cleaned)
-
-    locations = []
-
-    for scene in scene_lines:
-        parts = re.split(r"\s+-\s+", scene)
-        if len(parts) >= 2:
-            location = parts[1].strip()
-            location = re.sub(
-                r"\s+-\s+(DAY|NIGHT|MORNING|EVENING)$",
-                "",
-                location,
-                flags=re.IGNORECASE,
-            )
-            if location and location not in locations:
-                locations.append(location)
-
-    time_of_day = []
-
-    for value in ["DAY", "NIGHT", "MORNING", "EVENING", "DAWN", "DUSK"]:
-        if re.search(rf"\b{value}\b", text, re.IGNORECASE):
-            time_of_day.append(value)
-
-    return {
-        "scenes": scene_lines,
-        "characters": characters,
-        "locations": locations,
-        "time_of_day": time_of_day,
-        "dialogue": [],
-        "actions": [],
-        "props": [],
-        "wardrobe": [],
-        "sound": [],
-        "lighting": [],
-    }
-
-
-def run_cinepilot_analysis(text):
-    from app.tools.screenplay_tools import production_breakdown
-    return production_breakdown(text)
-
-
-def render_list(items, empty_message="No data detected."):
-    if not items:
-        st.caption(empty_message)
-        return
-    for item in items:
-        st.markdown(f"- {item}")
-
-
-if page == "🎬 Production Studio":
-
+with c3:
     st.markdown(
         """
-        <div class="hero">
-            <div class="badge">AI PRODUCTION INTELLIGENCE</div>
-            <div class="hero-title">CinePilot AI</div>
-            <div class="hero-subtitle">
-                Transform screenplay text into structured production
-                intelligence with Gemini-powered analysis, retrieval,
-                and agentic workflows.
-            </div>
-        </div>
-        """,
+<div class="feature-card" dir="rtl">
+<div class="feature-icon">🧠</div>
+<div class="feature-title">AI Agent</div>
+<div class="feature-text">
+وكيل CinePilot مدعوم بـ Gemini لاتخاذ خطوات تحليلية منظمة.
+</div>
+</div>
+""",
         unsafe_allow_html=True,
     )
 
+with c4:
     st.markdown(
         """
-        <div class="card">
-            <div class="card-title">🎥 Start a Production Analysis</div>
-            <div class="card-text">
-                Upload a screenplay or paste screenplay text below.
-                CinePilot will organize scenes, characters, locations,
-                actions, props, wardrobe, sound, and lighting.
-            </div>
-        </div>
-        """,
+<div class="feature-card" dir="rtl">
+<div class="feature-icon">🔎</div>
+<div class="feature-title">Semantic RAG</div>
+<div class="feature-text">
+استرجاع سياق السيناريو عند الحاجة للتحليل الدلالي.
+</div>
+</div>
+""",
         unsafe_allow_html=True,
     )
 
-    uploaded = st.file_uploader(
-        "Upload screenplay",
-        type=["txt", "md"],
-        help="Upload a TXT or Markdown screenplay.",
-    )
+st.markdown(
+    '<div class="section-title" dir="rtl">🎬 ابدأ تحليل الإنتاج</div>',
+    unsafe_allow_html=True,
+)
 
-    if uploaded is not None:
-        st.session_state.screenplay = read_uploaded_file(uploaded)
+st.markdown(
+    '<div class="section-subtitle" dir="rtl">ارفع سيناريو أو الصق النص مباشرة لتحويله إلى Production Intelligence.</div>',
+    unsafe_allow_html=True,
+)
 
-    screenplay_text = st.text_area(
-        "Screenplay",
-        value=st.session_state.screenplay,
-        height=330,
-        placeholder=(
-            "INT. COFFEE SHOP - DAY\n\n"
-            "John enters carrying a black backpack...\n\n"
-            "JOHN\n"
-            "Sarah? I didn't expect to see you here."
-        ),
-    )
+uploaded_file = st.file_uploader(
+    "تحميل السيناريو",
+    type=["txt", "md"],
+    help="الحد الأقصى الموصى به 200KB للملف.",
+)
 
-    st.session_state.screenplay = screenplay_text
+screenplay = ""
 
-    col1, col2, col3 = st.columns([1, 1, 2])
-
-    with col1:
-        analyze_clicked = st.button(
-            "🎬 Analyze Screenplay",
-            use_container_width=True,
-            type="primary",
+if uploaded_file is not None:
+    try:
+        screenplay = uploaded_file.read().decode("utf-8")
+    except UnicodeDecodeError:
+        screenplay = uploaded_file.read().decode(
+            "utf-8",
+            errors="replace",
         )
 
-    with col2:
-        if st.button("🗑 Clear", use_container_width=True):
-            st.session_state.screenplay = ""
-            st.session_state.analysis = None
-            st.rerun()
+if screenplay:
+    st.success(
+        f"تم تحميل السيناريو: {uploaded_file.name}"
+    )
 
-    if analyze_clicked:
-        if not screenplay_text.strip():
-            st.warning("Please provide a screenplay first.")
-        else:
-            with st.spinner("CinePilot is analyzing the screenplay..."):
-                result = run_cinepilot_analysis(screenplay_text)
-                st.session_state.analysis = result
-            st.success("Analysis completed. Production intelligence is ready.")
+screenplay_input = st.text_area(
+    "أو الصق السيناريو هنا",
+    value=screenplay,
+    height=300,
+    placeholder=(
+        "INT. COFFEE SHOP - DAY\n\n"
+        "JOHN enters carrying a black backpack.\n\n"
+        "JOHN\n"
+        "I didn't expect to see you here."
+    ),
+)
 
-    if st.session_state.analysis:
-        data = st.session_state.analysis
+col_a, col_b = st.columns(2)
 
-        st.markdown('<div class="section-title">Production Overview</div>', unsafe_allow_html=True)
+with col_a:
+    analyze_clicked = st.button(
+        "🎬 Analyze Screenplay",
+        use_container_width=True,
+    )
 
-        cols = st.columns(4)
+with col_b:
+    report_clicked = st.button(
+        "📘 Generate Production Bible",
+        use_container_width=True,
+    )
 
-        metrics = [
-            ("🎬", len(data.get("scenes", [])), "Scenes"),
-            ("👤", len(data.get("characters", [])), "Characters"),
-            ("📍", len(data.get("locations", [])), "Locations"),
-            ("🕐", len(data.get("time_of_day", [])), "Time Periods"),
-        ]
+if analyze_clicked:
 
-        for col, (icon, value, label) in zip(cols, metrics):
-            with col:
+    if not screenplay_input.strip():
+        st.warning(
+            "يرجى رفع سيناريو أو إدخال نص السيناريو أولاً."
+        )
+        st.stop()
+
+    with st.spinner("CinePilot يحلل السيناريو..."):
+
+        try:
+            data = production_breakdown(
+                screenplay_input
+            )
+        except Exception as exc:
+            st.error(
+                f"حدث خطأ أثناء التحليل: {exc}"
+            )
+            st.stop()
+
+    if not data.get("success"):
+        st.error(
+            data.get(
+                "error",
+                "فشل تحليل السيناريو.",
+            )
+        )
+        st.stop()
+
+    st.session_state["production_data"] = data
+    st.session_state["screenplay"] = screenplay_input
+
+    st.markdown(
+        '<div class="section-title" dir="rtl">📊 Production Overview</div>',
+        unsafe_allow_html=True,
+    )
+
+    metrics = [
+        (
+            "🎬",
+            data.get("scene_count", 0),
+            "Scenes",
+        ),
+        (
+            "👤",
+            data.get("character_count", 0),
+            "Characters",
+        ),
+        (
+            "📍",
+            data.get("location_count", 0),
+            "Locations",
+        ),
+        (
+            "🎒",
+            len(data.get("props", [])),
+            "Props",
+        ),
+        (
+            "👕",
+            len(data.get("wardrobe", [])),
+            "Wardrobe",
+        ),
+        (
+            "🔊",
+            len(data.get("sounds", [])),
+            "Sound",
+        ),
+        (
+            "💡",
+            len(data.get("lighting", [])),
+            "Lighting",
+        ),
+        (
+            "⚡",
+            len(data.get("actions", [])),
+            "Actions",
+        ),
+    ]
+
+    cols = st.columns(4)
+
+    for index, (icon, value, label) in enumerate(metrics):
+
+        with cols[index % 4]:
+
+            st.markdown(
+                f"""
+<div class="metric-card" dir="rtl">
+
+<div style="font-size:22px;">
+{icon}
+</div>
+
+<div class="metric-value">
+{value}
+</div>
+
+<div class="metric-label">
+{label}
+</div>
+
+</div>
+""",
+                unsafe_allow_html=True,
+            )
+
+    st.markdown(
+        '<div class="section-title" dir="rtl">🔎 Production Intelligence</div>',
+        unsafe_allow_html=True,
+    )
+
+    categories = [
+        (
+            "👤 Characters",
+            data.get("characters", []),
+        ),
+        (
+            "📍 Locations",
+            data.get("locations", []),
+        ),
+        (
+            "🕐 Time of Day",
+            data.get("time_of_day", []),
+        ),
+        (
+            "⚡ Actions",
+            data.get("actions", []),
+        ),
+        (
+            "🎒 Props",
+            data.get("props", []),
+        ),
+        (
+            "👕 Wardrobe",
+            data.get("wardrobe", []),
+        ),
+        (
+            "🔊 Sound",
+            data.get("sounds", []),
+        ),
+        (
+            "💡 Lighting",
+            data.get("lighting", []),
+        ),
+    ]
+
+    for title, items in categories:
+
+        if not items:
+            continue
+
+        with st.expander(
+            f"{title}  •  {len(items)}",
+            expanded=False,
+        ):
+
+            for item in items:
+
+                if isinstance(item, dict):
+
+                    value = item.get(
+                        "text",
+                        item.get(
+                            "heading",
+                            json.dumps(
+                                item,
+                                ensure_ascii=False,
+                            ),
+                        ),
+                    )
+
+                else:
+                    value = str(item)
+
                 st.markdown(
                     f"""
-                    <div class="metric-card">
-                        <div class="metric-icon">{icon}</div>
-                        <div class="metric-value">{value}</div>
-                        <div class="metric-label">{label}</div>
-                    </div>
-                    """,
+<div class="result-item">
+{value}
+</div>
+""",
                     unsafe_allow_html=True,
                 )
 
-        st.markdown('<div class="section-title">Production Elements</div>', unsafe_allow_html=True)
+    dialogue = data.get("dialogue", [])
 
-        tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(
-            ["🎭 Characters", "📍 Locations", "🎒 Props", "👕 Wardrobe", "🔊 Sound", "💡 Lighting"]
+    if dialogue:
+
+        st.markdown(
+            '<div class="section-title" dir="rtl">💬 Dialogue</div>',
+            unsafe_allow_html=True,
         )
 
-        with tab1:
-            st.markdown("### Characters")
-            render_list(data.get("characters", []))
-        with tab2:
-            st.markdown("### Locations")
-            render_list(data.get("locations", []))
-        with tab3:
-            st.markdown("### Props")
-            render_list(data.get("props", []))
-        with tab4:
-            st.markdown("### Wardrobe")
-            render_list(data.get("wardrobe", []))
-        with tab5:
-            st.markdown("### Sound")
-            render_list(data.get("sound", []))
-        with tab6:
-            st.markdown("### Lighting")
-            render_list(data.get("lighting", []))
+        for entry in dialogue:
 
+            character = entry.get(
+                "character",
+                "Unknown",
+            )
 
-elif page == "🤖 CinePilot Agent":
-    st.markdown('<div class="hero"><div class="badge">AGENTIC WORKFLOW</div><div class="hero-title">CinePilot Agent</div><div class="hero-subtitle">Ask production questions about your screenplay and receive grounded analysis.</div></div>', unsafe_allow_html=True)
+            text = entry.get(
+                "text",
+                "",
+            )
 
-    st.markdown('<div class="card"><div class="card-title">🤖 cinepilot_agent</div><div class="card-text">Gemini-powered production copilot using screenplay analysis tools and semantic retrieval.</div></div>', unsafe_allow_html=True)
+            st.markdown(
+                f"""
+<div class="result-card" dir="rtl">
 
-    st.markdown("### Ask CinePilot")
+<div class="result-header">
+🎭 {character}
+</div>
 
-    question = st.text_input("Production question", placeholder="Which scenes require night shooting?")
+<div style="color:#b8c2d6; line-height:1.8;">
+{text}
+</div>
 
-    if st.button("🤖 Ask CinePilot", type="primary", use_container_width=True):
-        if not question:
-            st.warning("Enter a question first.")
-        elif not st.session_state.screenplay:
-            st.warning("Analyze or provide a screenplay first.")
-        else:
-            st.info("Agent interface ready. Connect this action to your existing cinepilot_agent implementation.")
+</div>
+""",
+                unsafe_allow_html=True,
+            )
 
+    st.markdown(
+        """
+<div class="status-pill">
+● Screenplay analysis completed
+</div>
+""",
+        unsafe_allow_html=True,
+    )
 
-elif page == "📊 Production Report":
-    st.markdown('<div class="hero"><div class="badge">PRODUCTION REPORT</div><div class="hero-title">Production Intelligence</div><div class="hero-subtitle">A structured view of the information CinePilot extracted from your screenplay.</div></div>', unsafe_allow_html=True)
+if report_clicked:
 
-    if not st.session_state.analysis:
-        st.info("Run a screenplay analysis first to generate the report.")
-    else:
-        data = st.session_state.analysis
-        report = {
-            "scenes": data.get("scenes", []),
-            "characters": data.get("characters", []),
-            "locations": data.get("locations", []),
-            "time_of_day": data.get("time_of_day", []),
-            "dialogue": data.get("dialogue", []),
-            "actions": data.get("actions", []),
-            "props": data.get("props", []),
-            "wardrobe": data.get("wardrobe", []),
-            "sound": data.get("sound", []),
-            "lighting": data.get("lighting", []),
-        }
-        st.download_button("⬇️ Download JSON Report", data=json.dumps(report, indent=2, ensure_ascii=False), file_name="cinepilot_production_report.json", mime="application/json", use_container_width=True)
-        st.json(report)
+    if not screenplay_input.strip():
 
+        st.warning(
+            "يرجى إدخال السيناريو أولاً."
+        )
 
-elif page == "⚙️ System":
-    st.markdown('<div class="hero"><div class="badge">SYSTEM</div><div class="hero-title">CinePilot Architecture</div><div class="hero-subtitle">Production analysis, agent reasoning, and semantic retrieval working together.</div></div>', unsafe_allow_html=True)
+        st.stop()
 
-    components = [
-        ("🎬", "Screenplay Analysis", "Production extraction"),
-        ("🤖", "CinePilot Agent", "Gemini reasoning"),
-        ("🔧", "Tool Calling", "Structured production tools"),
-        ("🔎", "Semantic RAG", "Context retrieval"),
-        ("📊", "Production Report", "Structured intelligence"),
-    ]
+    with st.spinner(
+        "CinePilot يبني Production Bible..."
+    ):
 
-    for icon, title, description in components:
-        st.markdown(f'<div class="card"><div class="card-title">{icon} {title}</div><div class="card-text">{description}</div></div>', unsafe_allow_html=True)
+        try:
 
-    st.markdown("### Current Architecture")
-    st.code("""Screenplay
-    |
-    v
-Screenplay Analysis
-    |
-    +----------------------+
-    |                      |
-    v                      v
-Production Engine      Semantic RAG
-    |                      |
-    +----------+-----------+
-               |
-               v
-       CinePilot Agent
-               |
-               v
-      Production Report""", language="text")
+            bible = ProductionBible()
 
+            report = bible.generate_full_report(
+                screenplay_input
+            )
 
-st.markdown('<div style="margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.08); text-align: center; color: #697386; font-size: 0.82rem;">🎬 CinePilot AI · AI Production Intelligence · Powered by Gemini</div>', unsafe_allow_html=True)
+        except Exception as exc:
+
+            st.error(
+                f"حدث خطأ أثناء إنشاء التقرير: {exc}"
+            )
+
+            st.stop()
+
+    st.markdown(
+        '<div class="section-title" dir="rtl">📘 CinePilot Production Bible</div>',
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        """
+<div class="status-pill">
+● Production report generated
+</div>
+""",
+        unsafe_allow_html=True,
+    )
+
+    st.text_area(
+        "Production Report",
+        value=report,
+        height=650,
+    )
+
+    st.download_button(
+        label="⬇️ Download Production Bible",
+        data=report,
+        file_name="cinepilot_production_bible.txt",
+        mime="text/plain",
+        use_container_width=True,
+    )
+
+st.markdown(
+    '<div class="section-title" dir="rtl">⚙️ CinePilot Technology</div>',
+    unsafe_allow_html=True,
+)
+
+t1, t2, t3, t4 = st.columns(4)
+
+tech = [
+    (
+        "🧠",
+        "Gemini",
+        "AI reasoning and production intelligence",
+    ),
+    (
+        "🤖",
+        "Agentic Workflow",
+        "Tool calling and structured workflows",
+    ),
+    (
+        "🔎",
+        "Semantic RAG",
+        "Context-aware screenplay retrieval",
+    ),
+    (
+        "📊",
+        "ClickHouse",
+        "Production data storage and analytics",
+    ),
+]
+
+for column, item in zip(
+    [t1, t2, t3, t4],
+    tech,
+):
+
+    icon, title, text = item
+
+    with column:
+
+        st.markdown(
+            f"""
+<div class="feature-card" dir="rtl">
+
+<div class="feature-icon">
+{icon}
+</div>
+
+<div class="feature-title">
+{title}
+</div>
+
+<div class="feature-text">
+{text}
+</div>
+
+</div>
+""",
+            unsafe_allow_html=True,
+        )
+
+st.markdown(
+    """
+<div class="footer" dir="rtl">
+
+<strong>CinePilot AI</strong>
+
+<br>
+
+AI-powered production intelligence for filmmakers.
+
+<br><br>
+
+Built with Gemini • Agentic AI • Semantic RAG • Google Cloud
+
+</div>
+""",
+    unsafe_allow_html=True,
+)
