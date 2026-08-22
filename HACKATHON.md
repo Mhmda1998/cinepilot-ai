@@ -12,19 +12,21 @@
 | Entertainment Focus | YES |
 | Production-ready | YES |
 
-## Powerful Features
+## Key Features
 
-1. AI Storyboard Generator
-2. AI Scene Image Generator
+1. Production Bible - Unified report
+2. Script Coverage Report
 3. Scene Mood Analyzer
 4. Dialogue Emotion Analyzer
 5. Camera Angle Suggestor
-6. Script Coverage Report
+6. Shooting Schedule
 7. Budget Estimator
 8. AI Casting Suggestions
 9. Continuity Tracker
-10. ClickHouse Cloud Storage
-11. Streamlit Web Interface
+10. AI Storyboard Generator
+11. AI Scene Image Generator
+12. ClickHouse Cloud Storage
+13. Streamlit Web Interface
 
 ## Quick Start
 

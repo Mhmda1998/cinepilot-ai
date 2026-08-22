@@ -698,3 +698,17 @@ User-friendly web interface for all features.
 - SQLite - Local fallback storage
 - Streamlit UI - User-friendly web interface
 
+
+
+---
+
+## 🚀 Advanced Production Tools
+
+- **Production Bible:** Generate a unified report of all analyses.
+- **Shooting Schedule:** Automatically group scenes by location and time.
+- **Continuity Tracker:** Detect props/wardrobe that appear in only one scene.
+- **Camera Angle Suggestor:** Recommend shots and lenses per scene.
+- **Scene Mood Analyzer:** Mood, music, and color suggestions.
+- **Dialogue Emotion Analyzer:** Analyze character emotions.
+- **Budget Estimator:** Estimate production costs.
+- **Casting Suggestions:** AI actor archetype recommendations.
