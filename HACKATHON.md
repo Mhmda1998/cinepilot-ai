@@ -2,28 +2,30 @@
 
 ## Event: Agentic Cinema Hackathon
 
-## Project Overview
-
-CinePilot AI is an AI-powered screenplay analysis and production copilot.
-
 ## Requirements Checklist
 
 | Requirement | Status |
 |-------------|--------|
 | Gemini-powered | YES (Gemini 3.6 Flash) |
 | Google Cloud ADK | YES |
-| Partner Integration (ClickHouse) | YES via MCP |
+| Partner Integration (ClickHouse) | YES - Connected to Cloud |
 | Entertainment Focus | YES |
 | Production-ready | YES |
 
 ## Key Features
 
 - Gemini AI Analysis (real AI)
-- Screenplay Analysis
-- Production Breakdown
-- ClickHouse MCP Integration
+- ClickHouse Cloud (connected and working)
+- SQLite Storage (local fallback)
 - Streamlit Web Interface
+- 4 Agent Tools
 - Fact vs Inference Separation
+
+## ClickHouse Cloud
+
+- Host: y6mqvbljnk.europe-west4.gcp.clickhouse.cloud
+- Port: 8443
+- Status: Connected and storing data
 
 ## Quick Start
 

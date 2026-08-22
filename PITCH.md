@@ -1,27 +1,24 @@
 # CinePilot AI - Pitch Deck
 
-## The Problem
-
-Film production teams spend hours manually analyzing screenplays for props, wardrobe, sound, and lighting.
-
 ## The Solution
 
 CinePilot AI transforms screenplay text into structured production intelligence in seconds.
 
 ## Key Features
 
-- Gemini AI Analysis (real AI)
-- Screenplay Analysis (scenes, characters)
-- Production Breakdown (props, wardrobe, sound, lighting)
-- ClickHouse MCP Integration
-- Streamlit Web Interface
-- Fact vs Inference Separation
+1. Gemini AI Analysis (real AI)
+2. ClickHouse Cloud (connected & working)
+3. SQLite Storage (local fallback)
+4. Streamlit Web Interface
+5. 4 Agent Tools
+6. Fact vs Inference Separation
 
 ## Tech Stack
 
 - Gemini 3.6 Flash
 - Google ADK
-- ClickHouse
+- ClickHouse Cloud (connected)
+- SQLite
 - MCP
 - Streamlit
 - Python
@@ -29,6 +26,7 @@ CinePilot AI transforms screenplay text into structured production intelligence 
 ## Why CinePilot Wins
 
 1. Real AI analysis with Gemini
-2. Working web interface
-3. Partner integration (ClickHouse)
+2. Real ClickHouse Cloud connection
+3. Working web interface
 4. Production-ready
+5. Scalable architecture

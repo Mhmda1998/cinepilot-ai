@@ -629,3 +629,20 @@ CinePilot includes a Streamlit web interface:
 ```bash
 streamlit run streamlit_app.py
 ```
+
+
+---
+
+## ClickHouse Cloud (Connected)
+
+CinePilot is **connected to real ClickHouse Cloud**:
+
+- ✅ Host: y6mqvbljnk.europe-west4.gcp.clickhouse.cloud
+- ✅ Port: 8443
+- ✅ Database: cinepilot
+- ✅ Storage: production.db (SQLite) + ClickHouse Cloud
+
+### Functions:
+- `connect_to_cloud()` - Connect to ClickHouse Cloud
+- `store_to_cloud()` - Store production data in cloud
+- `check_connection()` - Check if ClickHouse is reachable
