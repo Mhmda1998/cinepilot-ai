@@ -158,3 +158,86 @@ def check_connection() -> dict:
         return {"success": True, "message": f"ClickHouse reachable at {config.host}:{config.port}"}
     except Exception as e:
         return {"success": False, "message": f"ClickHouse not reachable: {e}"}
+
+
+# ClickHouse Cloud Connection
+CLICKHOUSE_CLOUD_HOST = "y6mqvbljnk.europe-west4.gcp.clickhouse.cloud"
+CLICKHOUSE_CLOUD_PORT = 8443
+CLICKHOUSE_CLOUD_USER = "default"
+CLICKHOUSE_CLOUD_PASSWORD = "jg~k64WfwL_m_"
+
+
+def connect_to_cloud() -> dict:
+    """Connect to real ClickHouse Cloud."""
+    try:
+        import clickhouse_connect
+        
+        client = clickhouse_connect.get_client(
+            host=CLICKHOUSE_CLOUD_HOST,
+            port=CLICKHOUSE_CLOUD_PORT,
+            username=CLICKHOUSE_CLOUD_USER,
+            password=CLICKHOUSE_CLOUD_PASSWORD,
+            secure=True
+        )
+        
+        result = client.query("SELECT 1")
+        
+        return {
+            "success": True,
+            "message": f"Connected to ClickHouse Cloud",
+            "result": result.result_rows,
+            "client": client
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "message": str(e)
+        }
+
+
+def store_to_cloud(production_data: dict) -> dict:
+    """Store production data to real ClickHouse Cloud."""
+    connection = connect_to_cloud()
+    
+    if not connection["success"]:
+        return connection
+    
+    client = connection["client"]
+    
+    try:
+        # Create table
+        client.command("""
+            CREATE TABLE IF NOT EXISTS cinepilot_production (
+                name String,
+                element_type String
+            ) ENGINE = MergeTree()
+            ORDER BY name
+        """)
+        
+        # Store data
+        for prop in production_data.get("props", []):
+            client.command(f"INSERT INTO cinepilot_production VALUES ('{prop}', 'prop')")
+        
+        for char in production_data.get("characters", []):
+            client.command(f"INSERT INTO cinepilot_production VALUES ('{char}', 'character')")
+        
+        for item in production_data.get("wardrobe", []):
+            client.command(f"INSERT INTO cinepilot_production VALUES ('{item}', 'wardrobe')")
+        
+        for sound in production_data.get("sounds", []):
+            client.command(f"INSERT INTO cinepilot_production VALUES ('{sound}', 'sound')")
+        
+        for light in production_data.get("lighting", []):
+            client.command(f"INSERT INTO cinepilot_production VALUES ('{light}', 'lighting')")
+        
+        client.close()
+        
+        return {
+            "success": True,
+            "message": "Data stored in ClickHouse Cloud"
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "message": str(e)
+        }
